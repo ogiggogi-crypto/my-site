@@ -1,0 +1,398 @@
+<title>우리 집 장보기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+  /* 한 줄 카드 목록: 위에 바구니 그림, 아래로 종류별 칸 */
+  :root {
+    /* 계란 흰자(바탕) · 노른자(진행·체크) · 토마토(포인트) */
+    --bg: #fff8e7;
+    --card: #fffdf7;
+    --ink: #3a2a1e;
+    --muted: #8d7a64;
+    --line: #f3e3bd;
+    --accent: #e5432f;
+    --accent-ink: #ffffff;
+    --accent-soft: #fff1c2;
+    --yolk: #f7b500;
+    --white: #ffffff;
+    --head: #fde6a0;
+    --danger: #c42d1c;
+    --shadow: rgba(200, 120, 20, .10);
+    --font-display: "Jua", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    --font-body: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #221a12; --card: #2d2318; --ink: #fbefd9; --muted: #b9a283; --line: #4a3a26;
+      --accent: #ff6a52; --accent-ink: #2a0d08; --accent-soft: #3d3014; --yolk: #ffc533; --white: #fff4dc;
+      --head: #3a2d17; --danger: #ff8a75; --shadow: rgba(0, 0, 0, .3);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #221a12; --card: #2d2318; --ink: #fbefd9; --muted: #b9a283; --line: #4a3a26;
+    --accent: #ff6a52; --accent-ink: #2a0d08; --accent-soft: #3d3014; --yolk: #ffc533; --white: #fff4dc;
+    --head: #3a2d17; --danger: #ff8a75; --shadow: rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background-color: var(--bg);
+    background-image: radial-gradient(var(--line) 1.4px, transparent 1.6px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  main {
+    max-width: 640px; margin: 0 auto;
+    padding-block: 24px 60px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .hero {
+    display: flex; align-items: center; gap: 16px;
+    background: linear-gradient(135deg, var(--head), var(--card) 70%);
+    border: 1px solid var(--line); border-radius: 22px;
+    padding: 18px 20px;
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+  .hero svg.art { width: 120px; height: 104px; flex: none; }
+  .hero-text { flex: 1; min-width: 0; }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; margin: 0; line-height: 1.2; text-wrap: balance; }
+  .sub { margin: 2px 0 10px; color: var(--muted); }
+  .progress { font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bar { height: 10px; background: var(--line); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--yolk), var(--accent)); transition: width .3s; }
+  .sync { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: .8rem; color: var(--muted); }
+  .sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .sync.live i { background: #3fae5a; box-shadow: 0 0 0 3px rgba(63, 174, 90, .2); }
+  @media (max-width: 420px) {
+    .hero { padding: 14px; gap: 12px; }
+    .hero svg.art { width: 84px; height: 74px; }
+    h1 { font-size: 1.5rem; }
+  }
+
+  form {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 12px;
+  }
+  input, select, button { font: inherit; color: var(--ink); }
+  form input, form select {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  }
+  form input { flex: 1 1 180px; min-width: 0; }
+  form select { flex: 1 1 120px; min-width: 0; }
+  button { cursor: pointer; border-radius: 10px; padding: 10px 14px; border: 1px solid var(--line); background: var(--card); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  .primary:hover { filter: brightness(1.06); }
+
+  .cheer { text-align: center; padding: 8px 16px 0; }
+  .cheer svg { width: 110px; height: 90px; }
+  .cheer p { margin: 0; font-family: var(--font-display); font-size: 1.2rem; color: var(--accent); }
+  .cheer:not([hidden]) { animation: pop .4s ease-out; }
+  @keyframes pop { from { transform: scale(.9); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+
+  #lists { display: flex; flex-direction: column; gap: 12px; }
+  section {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 3px 10px var(--shadow);
+  }
+  section h2 {
+    font-family: var(--font-display); font-weight: 400; font-size: 1.1rem;
+    margin: 0; padding: 10px 16px; background: var(--head);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  section h2 .title { display: flex; align-items: center; gap: 8px; }
+  section h2 .count { font-family: var(--font-body); color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .cat-icon {
+    display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--line); font-size: 1rem;
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 16px; border-bottom: 1px solid var(--line); }
+  li:last-child { border-bottom: none; }
+  li label { flex: 1; display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; padding: 2px 0; }
+  .emoji { font-size: 1.15rem; width: 1.5em; text-align: center; flex: none; }
+  li .name { overflow-wrap: anywhere; }
+  li.done { background: var(--accent-soft); }
+  li.done .name { text-decoration: line-through; color: var(--muted); }
+
+  /* 체크하면 계란 프라이가 되는 체크박스 */
+  li input[type=checkbox] {
+    appearance: none; -webkit-appearance: none; margin: 0; flex: none;
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid var(--muted); background: var(--card);
+    transition: transform .2s, background .2s;
+  }
+  li input[type=checkbox]:checked {
+    border-color: var(--white);
+    background: radial-gradient(circle, var(--yolk) 0 42%, var(--white) 46%);
+    box-shadow: 0 0 0 1px var(--line), 0 2px 4px var(--shadow);
+    transform: rotate(-12deg) scale(1.08);
+  }
+  li input[type=checkbox]:disabled { cursor: default; }
+  .del { background: none; border: none; color: var(--muted); padding: 6px 10px; font-size: 1.05rem; line-height: 1; }
+  .del:hover { color: var(--danger); }
+
+  .empty { padding: 20px 16px; color: var(--muted); text-align: center; }
+  .note { font-size: .85rem; color: var(--muted); margin: 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .warn { color: var(--danger); border-color: var(--danger); }
+  .error { color: var(--danger); font-size: .9rem; margin: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<main>
+  <header class="hero">
+    <svg class="art" viewBox="0 0 120 104" aria-hidden="true">
+      <ellipse cx="60" cy="98" rx="46" ry="5" fill="#000" opacity=".08"/>
+      <path d="M30 44 Q60 4 90 44" fill="none" stroke="#b7793a" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="46" cy="46" r="18" fill="#e5432f"/>
+      <ellipse cx="40" cy="40" rx="5" ry="3" fill="#fff" opacity=".45" transform="rotate(-30 40 40)"/>
+      <path d="M46 30 l-7 -4 l5 6 l-6 3 l8 0 l2 6 l2 -6 l8 0 l-6 -3 l5 -6 z" fill="#3f9b4f"/>
+      <ellipse cx="74" cy="44" rx="12" ry="16" fill="#fffaf0" stroke="#efdcb4" stroke-width="1.5"/>
+      <ellipse cx="70" cy="38" rx="3" ry="5" fill="#fff" opacity=".9"/>
+      <path d="M86 50 q14 -14 22 -8 q-8 12 -22 8z" fill="#5bb36a"/>
+      <path d="M16 56 h88 l-10 38 h-68 z" fill="#d89a52"/>
+      <path d="M16 56 h88 v7 h-88 z" fill="#c98640"/>
+      <g stroke="#b7793a" stroke-width="2" opacity=".7">
+        <line x1="36" y1="66" x2="40" y2="90"/><line x1="52" y1="66" x2="54" y2="90"/>
+        <line x1="68" y1="66" x2="66" y2="90"/><line x1="84" y1="66" x2="80" y2="90"/>
+        <line x1="22" y1="76" x2="98" y2="76"/>
+      </g>
+    </svg>
+    <div class="hero-text">
+      <h1>우리 집 장보기</h1>
+      <p class="sub">오늘은 뭘 사 올까요?</p>
+      <div class="progress" id="progress">0 / 0 담음</div>
+      <div class="bar"><div id="bar"></div></div>
+      <div class="sync" id="sync"><i></i><span id="syncText">연결하는 중…</span></div>
+    </div>
+  </header>
+
+  <div class="cheer" id="cheer" hidden>
+    <svg viewBox="0 0 110 90" aria-hidden="true">
+      <path d="M20 50 q-6 -24 18 -30 q14 -14 34 -2 q26 2 22 26 q10 22 -16 30 q-20 12 -38 2 q-24 0 -20 -26z" fill="#fffaf0" stroke="#efdcb4" stroke-width="2"/>
+      <circle cx="55" cy="48" r="17" fill="#f7b500"/>
+      <ellipse cx="49" cy="42" rx="5" ry="3" fill="#fff" opacity=".6"/>
+      <circle cx="50" cy="48" r="1.8" fill="#3a2a1e"/><circle cx="61" cy="48" r="1.8" fill="#3a2a1e"/>
+      <path d="M50 54 q5 5 11 0" fill="none" stroke="#3a2a1e" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <p>장보기 완료! 수고했어요</p>
+  </div>
+
+  <form id="addForm">
+    <input id="newName" placeholder="새 항목 (예: 두부)" autocomplete="off" maxlength="40" required aria-label="새 항목 이름">
+    <select id="newCat" aria-label="종류"></select>
+    <button class="primary" type="submit">추가</button>
+  </form>
+  <p class="error" id="error" hidden></p>
+
+  <div id="lists"></div>
+
+  <div class="actions" id="actions">
+    <button id="uncheckAll" type="button">체크 모두 해제</button>
+    <button id="removeDone" type="button">산 항목 지우기</button>
+  </div>
+</main>
+
+<script>
+  const CATEGORIES = ["채소·과일", "육류·생선", "유제품·계란", "가공식품", "생활용품", "기타"];
+  const CAT_ICON = {
+    "채소·과일": "🥕", "육류·생선": "🥩", "유제품·계란": "🥚",
+    "가공식품": "🥫", "생활용품": "🧻", "기타": "🧺"
+  };
+  // 이름에 이 글자가 들어 있으면 해당 그림을 붙여요
+  const ITEM_ICON = [
+    ["토마토", "🍅"], ["양파", "🧅"], ["파", "🌿"], ["사과", "🍎"], ["바나나", "🍌"],
+    ["딸기", "🍓"], ["포도", "🍇"], ["귤", "🍊"], ["오렌지", "🍊"], ["수박", "🍉"],
+    ["감자", "🥔"], ["고구마", "🍠"], ["당근", "🥕"], ["오이", "🥒"], ["마늘", "🧄"],
+    ["버섯", "🍄"], ["고추", "🌶️"], ["옥수수", "🌽"], ["브로콜리", "🥦"], ["상추", "🥬"], ["배추", "🥬"],
+    ["돼지", "🥓"], ["소고기", "🥩"], ["닭", "🍗"], ["생선", "🐟"], ["고등어", "🐟"], ["새우", "🦐"],
+    ["계란", "🥚"], ["달걀", "🥚"], ["우유", "🥛"], ["치즈", "🧀"], ["버터", "🧈"], ["요거트", "🥛"],
+    ["라면", "🍜"], ["쌀", "🍚"], ["빵", "🍞"], ["커피", "☕"], ["과자", "🍪"],
+    ["휴지", "🧻"], ["세제", "🧴"], ["샴푸", "🧴"], ["비누", "🧼"], ["칫솔", "🪥"]
+  ];
+  const iconFor = item => (ITEM_ICON.find(([w]) => item.name.includes(w)) || [, CAT_ICON[item.cat] || "🛒"])[1];
+
+  const $ = id => document.getElementById(id);
+  const catSelect = $("newCat");
+  CATEGORIES.forEach(c => catSelect.add(new Option(c, c)));
+
+  let items = [];          // {id, name, cat, done, createdAt}
+  let col = null;          // 공유 저장소의 items 컬렉션
+  let canWrite = true;
+  let loaded = false;
+  let confirmTimer = null;
+
+  function showError(msg) {
+    const el = $("error");
+    el.textContent = msg || "";
+    el.hidden = !msg;
+  }
+
+  function render() {
+    const wrap = $("lists");
+    wrap.replaceChildren();
+    CATEGORIES.forEach(cat => {
+      const inCat = items.filter(i => (CATEGORIES.includes(i.cat) ? i.cat : "기타") === cat);
+      if (!inCat.length) return;
+      inCat.sort((a, b) => (a.done - b.done) || (a.createdAt || 0) - (b.createdAt || 0));
+      const sec = document.createElement("section");
+      const h = document.createElement("h2");
+      const title = document.createElement("span");
+      title.className = "title";
+      const icon = document.createElement("span");
+      icon.className = "cat-icon";
+      icon.textContent = CAT_ICON[cat];
+      title.append(icon, cat);
+      const count = document.createElement("span");
+      count.className = "count";
+      count.textContent = `${inCat.filter(i => i.done).length}/${inCat.length}`;
+      h.append(title, count);
+      const ul = document.createElement("ul");
+      inCat.forEach(item => ul.append(row(item)));
+      sec.append(h, ul);
+      wrap.append(sec);
+    });
+    if (!items.length) {
+      const sec = document.createElement("section");
+      const p = document.createElement("div");
+      p.className = "empty";
+      p.textContent = loaded
+        ? "목록이 비어 있어요. 위 입력칸에 살 것을 적고 \"추가\"를 눌러 보세요."
+        : "장보기 목록을 불러오는 중이에요…";
+      sec.append(p);
+      wrap.append(sec);
+    }
+    const done = items.filter(i => i.done).length;
+    $("progress").textContent = `${done} / ${items.length} 담음`;
+    $("bar").style.width = items.length ? (done / items.length * 100) + "%" : "0";
+    $("cheer").hidden = !(items.length > 0 && done === items.length);
+    $("addForm").hidden = !canWrite;
+    $("actions").hidden = !canWrite || !items.length;
+  }
+
+  function row(item) {
+    const li = document.createElement("li");
+    if (item.done) li.className = "done";
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "cb-" + item.id;
+    cb.checked = !!item.done;
+    cb.disabled = !canWrite;
+    cb.addEventListener("change", () => write(() => col.doc(item.id).update({ done: cb.checked })));
+    const emoji = document.createElement("span");
+    emoji.className = "emoji";
+    emoji.textContent = iconFor(item);
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    label.append(cb, emoji, name);
+    li.append(label);
+    if (canWrite) {
+      const del = document.createElement("button");
+      del.className = "del";
+      del.type = "button";
+      del.setAttribute("aria-label", item.name + " 삭제");
+      del.textContent = "✕";
+      del.addEventListener("click", () => write(() => col.doc(item.id).delete()));
+      li.append(del);
+    }
+    return li;
+  }
+
+  async function write(fn) {
+    if (!col) return;
+    showError("");
+    try {
+      await fn();
+    } catch (e) {
+      if (e && e.code === "invalid_argument") {
+        canWrite = false;
+        showError("이 목록은 보기만 할 수 있어요. 고치려면 목록 주인에게 편집 권한을 받아 주세요.");
+        render();
+      } else if (e && e.code === "quota_exceeded") {
+        showError("저장 공간이 가득 찼어요. 산 항목을 지운 뒤 다시 추가해 주세요.");
+      } else {
+        showError("저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.");
+      }
+    }
+  }
+
+  $("addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const input = $("newName");
+    const name = input.value.trim();
+    if (!name || !col) return;
+    input.value = "";
+    input.focus();
+    write(() => col.add({ name, cat: catSelect.value, done: false, createdAt: Date.now() }));
+  });
+
+  $("uncheckAll").addEventListener("click", () => write(async () => {
+    for (const i of items.filter(i => i.done)) await col.doc(i.id).update({ done: false });
+  }));
+
+  // confirm() 창이 뜨지 않는 곳이라 버튼을 두 번 누르게 해요
+  $("removeDone").addEventListener("click", e => {
+    const btn = e.currentTarget;
+    if (!items.some(i => i.done)) return;
+    if (!btn.classList.contains("warn")) {
+      btn.classList.add("warn");
+      btn.textContent = "한 번 더 누르면 지워져요";
+      clearTimeout(confirmTimer);
+      confirmTimer = setTimeout(() => { btn.classList.remove("warn"); btn.textContent = "산 항목 지우기"; }, 3000);
+      return;
+    }
+    clearTimeout(confirmTimer);
+    btn.classList.remove("warn");
+    btn.textContent = "산 항목 지우기";
+    write(async () => {
+      for (const i of items.filter(i => i.done)) await col.doc(i.id).delete();
+    });
+  });
+
+  function setSync(live, text) {
+    $("sync").classList.toggle("live", live);
+    $("syncText").textContent = text;
+  }
+
+  async function start() {
+    render();
+    const db = window.claude ? await window.claude.use("db") : null;
+    if (!db) {
+      loaded = true;
+      canWrite = false;
+      setSync(false, "지금은 목록을 불러올 수 없어요");
+      render();
+      return;
+    }
+    const user = await window.claude.use("user");
+    if (user && user.can && (await user.can("data.write")) === false) canWrite = false;
+    col = db.collection("items");
+    col.onSnapshot(snap => {
+      loaded = true;
+      items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setSync(true, canWrite ? "가족과 함께 보는 중" : "보기 전용으로 보는 중");
+      render();
+    }, () => {
+      setSync(false, "연결이 끊겼어요. 새로고침해 주세요");
+    });
+  }
+  start();
+</script>
