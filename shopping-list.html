@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 집 장보기</title>
+<style>
+  :root {
+    /* 계란 흰자(바탕) · 노른자(진행·체크) · 토마토(포인트) */
+    --bg: #fff8e7;
+    --card: #fffdf7;
+    --ink: #3a2a1e;
+    --muted: #9a8670;
+    --line: #f3e3bd;
+    --accent: #e5432f;
+    --accent-soft: #fff1c2;
+    --yolk: #f7b500;
+    --head: #fde6a0;
+    --danger: #c42d1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #221a12;
+      --card: #2d2318;
+      --ink: #fbefd9;
+      --muted: #b9a283;
+      --line: #4a3a26;
+      --accent: #ff6a52;
+      --accent-soft: #3d3014;
+      --yolk: #ffc533;
+      --head: #3a2d17;
+      --danger: #ff8a75;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  body {
+    background-image: radial-gradient(var(--line) 1.4px, transparent 1.6px);
+    background-size: 22px 22px;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .hero {
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 16px;
+    background: linear-gradient(135deg, var(--head), var(--card) 70%);
+    border: 1px solid var(--line); border-radius: 22px;
+    padding: 18px 20px; margin-bottom: 16px;
+    box-shadow: 0 6px 18px rgba(200, 120, 20, .10);
+  }
+  .hero svg.art { width: 120px; height: 104px; flex: none; }
+  .hero-text { flex: 1; min-width: 0; }
+  h1 { font-size: 1.6rem; margin: 0; letter-spacing: -.5px; }
+  .sub { margin: 2px 0 10px; color: var(--muted); font-size: .95rem; }
+  .progress { color: var(--ink); font-size: 0.9rem; font-weight: 600; }
+  .bar { height: 10px; background: var(--line); border-radius: 99px; margin: 6px 0 0; overflow: hidden; }
+  @media (max-width: 420px) {
+    .hero svg.art { width: 88px; height: 76px; }
+    h1 { font-size: 1.35rem; }
+  }
+
+  .cat-icon {
+    display: inline-grid; place-items: center;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--line);
+    font-size: 1rem; margin-right: 8px;
+  }
+  section h2 .title { display: flex; align-items: center; }
+  .emoji { font-size: 1.15rem; width: 1.5em; text-align: center; flex: none; }
+
+  .cheer { display: none; text-align: center; padding: 18px 16px 8px; }
+  .cheer.show { display: block; animation: pop .4s ease-out; }
+  .cheer svg { width: 110px; height: 90px; }
+  .cheer p { margin: 4px 0 0; font-weight: 700; color: var(--accent); }
+  @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--yolk), var(--accent)); transition: width .25s; }
+
+  form {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 12px; margin-bottom: 20px;
+  }
+  form input, form select, button {
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  }
+  form input { flex: 1 1 180px; min-width: 0; }
+  form select { flex: 0 1 140px; }
+  .primary { background: var(--accent); color: #fff; border-color: var(--accent); cursor: pointer; font-weight: 600; }
+
+  section {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; margin-bottom: 14px; overflow: hidden;
+  }
+  section h2 {
+    font-size: 1rem; margin: 0; padding: 12px 16px;
+    display: flex; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  section h2 { background: var(--head); }
+  section h2 span { color: var(--muted); font-weight: 400; font-size: .9rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  li:last-child { border-bottom: none; }
+  li label { flex: 1; display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; }
+  /* 체크하면 계란 프라이가 되는 체크박스 */
+  li input[type=checkbox] {
+    appearance: none; -webkit-appearance: none; margin: 0; flex: none;
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid var(--muted); background: var(--card);
+    transition: all .2s;
+  }
+  li input[type=checkbox]:checked {
+    border-color: #fff; background: radial-gradient(circle, var(--yolk) 0 42%, #fff 46%);
+    box-shadow: 0 0 0 1px var(--line), 0 2px 4px rgba(200, 120, 20, .25);
+    transform: rotate(-12deg) scale(1.08);
+  }
+  li input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  section { box-shadow: 0 3px 10px rgba(200, 120, 20, .06); }
+  .primary:hover { filter: brightness(1.06); }
+  li .name { overflow-wrap: anywhere; }
+  li.done { background: var(--accent-soft); }
+  li.done .name { text-decoration: line-through; color: var(--muted); }
+  .del {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    padding: 4px 8px; font-size: 1.1rem; line-height: 1;
+  }
+  .del:hover { color: var(--danger); }
+  .empty { padding: 12px 16px; color: var(--muted); font-size: .9rem; }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .actions button { cursor: pointer; background: var(--card); }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <!-- 장바구니 속 토마토와 계란 -->
+    <svg class="art" viewBox="0 0 120 104" aria-hidden="true">
+      <ellipse cx="60" cy="98" rx="46" ry="5" fill="#000" opacity=".08"/>
+      <path d="M30 44 Q60 4 90 44" fill="none" stroke="#b7793a" stroke-width="5" stroke-linecap="round"/>
+      <!-- 토마토 -->
+      <circle cx="46" cy="46" r="18" fill="#e5432f"/>
+      <ellipse cx="40" cy="40" rx="5" ry="3" fill="#fff" opacity=".45" transform="rotate(-30 40 40)"/>
+      <path d="M46 30 l-7 -4 l5 6 l-6 3 l8 0 l2 6 l2 -6 l8 0 l-6 -3 l5 -6 z" fill="#3f9b4f"/>
+      <!-- 계란 -->
+      <ellipse cx="74" cy="44" rx="12" ry="16" fill="#fffaf0" stroke="#efdcb4" stroke-width="1.5"/>
+      <ellipse cx="70" cy="38" rx="3" ry="5" fill="#fff" opacity=".9"/>
+      <!-- 잎 -->
+      <path d="M86 50 q14 -14 22 -8 q-8 12 -22 8z" fill="#5bb36a"/>
+      <!-- 바구니 -->
+      <path d="M16 56 h88 l-10 38 h-68 z" fill="#d89a52"/>
+      <path d="M16 56 h88 v7 h-88 z" fill="#c98640"/>
+      <g stroke="#b7793a" stroke-width="2" opacity=".7">
+        <line x1="36" y1="66" x2="40" y2="90"/><line x1="52" y1="66" x2="54" y2="90"/>
+        <line x1="68" y1="66" x2="66" y2="90"/><line x1="84" y1="66" x2="80" y2="90"/>
+        <line x1="22" y1="76" x2="98" y2="76"/>
+      </g>
+    </svg>
+    <div class="hero-text">
+      <h1>우리 집 장보기</h1>
+      <p class="sub">오늘은 뭘 사 올까요?</p>
+      <div class="progress" id="progress"></div>
+      <div class="bar"><div id="bar"></div></div>
+    </div>
+  </header>
+
+  <div class="cheer" id="cheer">
+    <svg viewBox="0 0 110 90" aria-hidden="true">
+      <path d="M20 50 q-6 -24 18 -30 q14 -14 34 -2 q26 2 22 26 q10 22 -16 30 q-20 12 -38 2 q-24 0 -20 -26z" fill="#fffaf0" stroke="#efdcb4" stroke-width="2"/>
+      <circle cx="55" cy="48" r="17" fill="#f7b500"/>
+      <ellipse cx="49" cy="42" rx="5" ry="3" fill="#fff" opacity=".6"/>
+      <circle cx="50" cy="48" r="1.8" fill="#3a2a1e"/><circle cx="61" cy="48" r="1.8" fill="#3a2a1e"/>
+      <path d="M50 54 q5 5 11 0" fill="none" stroke="#3a2a1e" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <p>장보기 완료! 수고했어요 🎉</p>
+  </div>
+
+  <form id="addForm">
+    <input id="newName" placeholder="새 항목 (예: 두부)" autocomplete="off" required>
+    <select id="newCat"></select>
+    <button class="primary" type="submit">추가</button>
+  </form>
+
+  <div id="lists"></div>
+
+  <div class="actions">
+    <button id="uncheckAll" type="button">체크 모두 해제</button>
+    <button id="removeDone" type="button">산 항목 지우기</button>
+  </div>
+</main>
+
+<script>
+  const KEY = "shopping-list-v1";
+  const CATEGORIES = ["채소·과일", "육류·생선", "유제품·계란", "가공식품", "생활용품", "기타"];
+  const DEFAULTS = [
+    ["양파", "채소·과일"], ["대파", "채소·과일"], ["사과", "채소·과일"],
+    ["돼지고기", "육류·생선"], ["우유", "유제품·계란"], ["계란", "유제품·계란"],
+    ["토마토", "채소·과일"], ["라면", "가공식품"], ["휴지", "생활용품"]
+  ];
+  const CAT_ICON = {
+    "채소·과일": "🥕", "육류·생선": "🥩", "유제품·계란": "🥚",
+    "가공식품": "🥫", "생활용품": "🧻", "기타": "🧺"
+  };
+  // 이름에 이 글자가 들어 있으면 해당 그림을 붙여요
+  const ITEM_ICON = [
+    ["토마토", "🍅"], ["양파", "🧅"], ["파", "🌿"], ["사과", "🍎"], ["바나나", "🍌"],
+    ["딸기", "🍓"], ["포도", "🍇"], ["귤", "🍊"], ["오렌지", "🍊"], ["수박", "🍉"],
+    ["감자", "🥔"], ["고구마", "🍠"], ["당근", "🥕"], ["오이", "🥒"], ["마늘", "🧄"],
+    ["버섯", "🍄"], ["고추", "🌶️"], ["옥수수", "🌽"], ["브로콜리", "🥦"], ["상추", "🥬"], ["배추", "🥬"],
+    ["돼지", "🥓"], ["소고기", "🥩"], ["닭", "🍗"], ["생선", "🐟"], ["고등어", "🐟"], ["새우", "🦐"],
+    ["계란", "🥚"], ["달걀", "🥚"], ["우유", "🥛"], ["치즈", "🧀"], ["버터", "🧈"], ["요거트", "🥛"],
+    ["라면", "🍜"], ["쌀", "🍚"], ["빵", "🍞"], ["커피", "☕"], ["과자", "🍪"],
+    ["휴지", "🧻"], ["세제", "🧴"], ["샴푸", "🧴"], ["비누", "🧼"], ["칫솔", "🪥"]
+  ];
+  function iconFor(item) {
+    const hit = ITEM_ICON.find(([word]) => item.name.includes(word));
+    return hit ? hit[1] : CAT_ICON[item.cat] || "🛒";
+  }
+
+  let items = load();
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY));
+      if (Array.isArray(saved)) return saved;
+    } catch (e) {}
+    return DEFAULTS.map(([name, cat]) => ({ id: uid(), name, cat, done: false }));
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {}
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  const catSelect = document.getElementById("newCat");
+  CATEGORIES.forEach(c => catSelect.add(new Option(c, c)));
+
+  function render() {
+    const wrap = document.getElementById("lists");
+    wrap.innerHTML = "";
+    CATEGORIES.forEach(cat => {
+      const inCat = items.filter(i => i.cat === cat);
+      if (!inCat.length) return;
+      inCat.sort((a, b) => a.done - b.done);
+      const sec = document.createElement("section");
+      const h = document.createElement("h2");
+      const title = document.createElement("span");
+      title.className = "title";
+      const icon = document.createElement("span");
+      icon.className = "cat-icon";
+      icon.textContent = CAT_ICON[cat];
+      title.append(icon, cat);
+      h.append(title);
+      const count = document.createElement("span");
+      count.textContent = `${inCat.filter(i => i.done).length}/${inCat.length}`;
+      h.append(count);
+      const ul = document.createElement("ul");
+      inCat.forEach(item => ul.append(row(item)));
+      sec.append(h, ul);
+      wrap.append(sec);
+    });
+    if (!items.length) {
+      wrap.innerHTML = '<section><div class="empty">목록이 비어 있어요. 위에서 항목을 추가해 보세요.</div></section>';
+    }
+    const done = items.filter(i => i.done).length;
+    document.getElementById("progress").textContent = `${done} / ${items.length} 담음`;
+    document.getElementById("bar").style.width = items.length ? (done / items.length * 100) + "%" : "0";
+    document.getElementById("cheer").classList.toggle("show", items.length > 0 && done === items.length);
+  }
+
+  function row(item) {
+    const li = document.createElement("li");
+    if (item.done) li.className = "done";
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = item.done;
+    cb.addEventListener("change", () => { item.done = cb.checked; save(); render(); });
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    const emoji = document.createElement("span");
+    emoji.className = "emoji";
+    emoji.textContent = iconFor(item);
+    label.append(cb, emoji, name);
+    const del = document.createElement("button");
+    del.className = "del";
+    del.type = "button";
+    del.title = "삭제";
+    del.setAttribute("aria-label", item.name + " 삭제");
+    del.textContent = "✕";
+    del.addEventListener("click", () => { items = items.filter(i => i.id !== item.id); save(); render(); });
+    li.append(label, del);
+    return li;
+  }
+
+  document.getElementById("addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const input = document.getElementById("newName");
+    const name = input.value.trim();
+    if (!name) return;
+    items.push({ id: uid(), name, cat: catSelect.value, done: false });
+    save(); render();
+    input.value = ""; input.focus();
+  });
+  document.getElementById("uncheckAll").addEventListener("click", () => {
+    items.forEach(i => i.done = false); save(); render();
+  });
+  document.getElementById("removeDone").addEventListener("click", () => {
+    if (!items.some(i => i.done)) return;
+    if (!confirm("체크한 항목을 목록에서 지울까요?")) return;
+    items = items.filter(i => !i.done); save(); render();
+  });
+
+  render();
+</script>
+</body>
+</html>
